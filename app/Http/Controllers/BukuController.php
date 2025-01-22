@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Buku;
 use App\Models\Kategori;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Validator;
+use Response;
 
 class BukuController extends Controller
 {
@@ -27,7 +30,38 @@ class BukuController extends Controller
      */
     public function store(Request $request)
     {
+
+        // $validatedData = $request->validate([
+        //     'judul' => ['required'],
+        //     'kategori_id' => ['required'],
+        //     'penulis' => ['required'],
+        //     'penerbit' => ['required'],
+        //     'isbn' => ['required'],
+        //     'tahun' => ['required'],
+        //     'jumlah' => ['required'],
+        // ]);
+
         $buku = new Buku;
+
+        $rules = [
+            'judul' => 'required',
+            'kategori_id' => 'required',
+            'penulis' => 'required',
+            'penerbit' => 'required',
+            'isbn' => 'required',
+            'tahun' => 'required',
+            'jumlah' => 'required',
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'data gagal dikirim',
+                'data' => $validator->errors()
+            ]);
+        }
 
         $buku->judul = $request->judul;
         $buku->kategori_id = $request->kategori_id;
@@ -60,8 +94,19 @@ class BukuController extends Controller
      */
     public function show($id)
     {
-        $buku = Buku::findOrFail($id);
-        return response()->json($buku);
+        $buku = Buku::find($id);
+        if ($buku) {
+            return response()->json([
+                'status' => true,
+                'message' => 'data berhasil ditampilkan',
+                'data' => $buku
+            ], 200);
+        } else {
+            return response()->json([
+                'status' => false,
+                'message' => 'data gagal ditampilkan',
+            ]);
+        }
     }
 
     /**
@@ -73,7 +118,31 @@ class BukuController extends Controller
      */
     public function update(Request $request, $id)
     {
+        // $validatedData = $request->validate([
+        //     'title' => ['required', 'unique:posts', 'max:255'],
+        //     'body' => ['required'],
+        // ]);
         $buku = Buku::findOrFail($id);
+
+        $rules = [
+            'judul' => 'required',
+            'kategori_id' => 'required',
+            'penulis' => 'required',
+            'penerbit' => 'required',
+            'isbn' => 'required',
+            'tahun' => 'required',
+            'jumlah' => 'required',
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'data gagal diperbarui',
+                'data' => $validator->errors()
+            ]);
+        }
 
         $buku->judul = $request->judul;
         $buku->kategori_id = $request->kategori_id;
@@ -84,7 +153,11 @@ class BukuController extends Controller
         $buku->jumlah = $request->jumlah;
 
         $buku->save();
-        return response()->json($request);
+        return response()->json([
+            'status' => true,
+            'message' => 'data berhasil diperbarui',
+            'data' => $request
+        ]);
     }
 
     /**
@@ -95,9 +168,21 @@ class BukuController extends Controller
      */
     public function destroy($id)
     {
-        $buku = Buku::findOrFail($id);
+        $buku = Buku::find($id);
         $buku->delete();
 
-        return response()->json($buku);
+        if ($buku) {
+            return response()->json([
+                'status' => true,
+                'message' => 'data berhasil dihapus',
+                'data' => $buku
+            ], 200);
+        } else {
+            return response()->json([
+                'status' => false,
+                'message' => 'data gagal dihapus',
+            ]);
+        }
+
     }
 }
