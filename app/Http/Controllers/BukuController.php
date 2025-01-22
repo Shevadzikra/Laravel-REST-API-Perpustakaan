@@ -7,6 +7,7 @@ use App\Models\Kategori;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
 use Response;
 
 class BukuController extends Controller
@@ -18,9 +19,29 @@ class BukuController extends Controller
      */
     public function index()
     {
-        $buku = Buku::get();
-        return response()->json($buku);
+        $buku = Buku::all();
+    
+        $data = $buku->map(function ($item) {
+            $fotoPath = $item->image;
+            return [
+                'judul' => $item->judul,
+                'kategori_id' => $item->kategori_id,
+                'penulis' => $item->penulis,
+                'penerbit' => $item->penerbit,
+                'isbn' => $item->isbn,
+                'tahun' => $item->tahun,
+                'jumlah' => $item->jumlah,
+                'image' => 'http://127.0.0.1:8000/storage/'.$fotoPath,
+            ];
+        });
+    
+        return response()->json([
+            'status' => true,
+            'message' => 'Data berhasil ditampilkan',
+            'data' => $data,
+        ]);
     }
+    
 
     /**
      * Store a newly created resource in storage.
@@ -31,21 +52,30 @@ class BukuController extends Controller
     public function store(Request $request)
     {
 
-        // $validatedData = $request->validate([
-        //     'judul' => ['required'],
-        //     'kategori_id' => ['required'],
-        //     'penulis' => ['required'],
-        //     'penerbit' => ['required'],
-        //     'isbn' => ['required'],
-        //     'tahun' => ['required'],
-        //     'jumlah' => ['required'],
-        // ]);
+        /*
+        $validatedData = $request->validate([
+            'judul' => ['required'],
+            'kategori_id' => ['required'],
+            'penulis' => ['required'],
+            'penerbit' => ['required'],
+            'isbn' => ['required'],
+            'tahun' => ['required'],
+            'jumlah' => ['required'],
+        ]);
+
+        $uploadFolder = 'users';
+        $image = $request->file('image');
+        $image_path = $image->store($uploadFolder, 'public');
+        */
 
         $buku = new Buku;
+
+        
 
         $rules = [
             'judul' => 'required',
             'kategori_id' => 'required',
+            'image' => 'required|image:jpeg,png,jpg,gif,svg|max:2048',
             'penulis' => 'required',
             'penerbit' => 'required',
             'isbn' => 'required',
@@ -63,8 +93,15 @@ class BukuController extends Controller
             ]);
         }
 
+        $folderUpload = 'images';
+        $foto = $foto = $request->file('image');
+        $fotoPath = $foto->store($folderUpload, 'public');
+
+        $fotoUrl = Storage::disk('public')->url($fotoPath);
+
         $buku->judul = $request->judul;
         $buku->kategori_id = $request->kategori_id;
+        $buku->image = $fotoPath;
         $buku->penulis = $request->penulis;
         $buku->penerbit = $request->penerbit;
         $buku->isbn = $request->isbn;
@@ -74,16 +111,32 @@ class BukuController extends Controller
         $buku->save();
     
         // Mengembalikan response JSON
-        return response()->json($buku);
+        return response()->json([
+            'status' => true,
+            'message' => 'data berhasil dikirim',
+            'data' => [
+                'judul' => $buku->judul,
+                'kategori_id' => $buku->kategori_id,
+                'fotoUrl' => $fotoUrl,
+                'penulis' => $buku->penulis,
+                'penerbit' => $buku->penerbit,
+                'isbn' => $buku->isbn,
+                'tahun' => $buku->tahun,
+                'jumlah' => $buku->jumlah,
+            ],
+        ]);
 
-    //     'id',
-    //     'kategori_id',
-    //     'judul',
-    //     'penulis',
-    //     'penerbit',
-    //     'isbn',
-    //     'tahun',
-    //     'jumlah'
+        /*
+        'id',
+        'kategori_id',
+        'judul',
+        'penulis',
+        'penerbit',
+        'isbn',
+        'tahun',
+        'jumlah'
+        */
+
     }
 
     /**
@@ -127,6 +180,7 @@ class BukuController extends Controller
         $rules = [
             'judul' => 'required',
             'kategori_id' => 'required',
+            'image' => 'required|image:jpeg,png,jpg,gif,svg|max:2048',
             'penulis' => 'required',
             'penerbit' => 'required',
             'isbn' => 'required',
@@ -147,6 +201,7 @@ class BukuController extends Controller
         $buku->judul = $request->judul;
         $buku->kategori_id = $request->kategori_id;
         $buku->penulis = $request->penulis;
+        $buku->image = $request->image;
         $buku->penerbit = $request->penerbit;
         $buku->isbn = $request->isbn;
         $buku->tahun = $request->tahun;

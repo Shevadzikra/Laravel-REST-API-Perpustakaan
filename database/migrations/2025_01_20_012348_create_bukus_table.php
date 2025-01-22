@@ -18,6 +18,7 @@ return new class extends Migration
             $table->id('id')->autoIncrement();
             $table->foreignId('kategori_id')->unsigned()->constrained('kategori')->onDelete('cascade');
             $table->text('judul')->nullable();
+            $table->text('image')->nullable();
             $table->string('penulis')->nullable();
             $table->string('penerbit')->nullable();
             $table->string('isbn')->nullable();
