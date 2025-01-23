@@ -19,6 +19,7 @@ class Buku extends Model
         'id',
         'kategori_id',
         'image',
+        'image_url',
         'judul',
         'penulis',
         'penerbit',

@@ -21,24 +21,24 @@ class BukuController extends Controller
     {
         $buku = Buku::all();
     
-        $data = $buku->map(function ($item) {
-            $fotoPath = $item->image;
-            return [
-                'judul' => $item->judul,
-                'kategori_id' => $item->kategori_id,
-                'penulis' => $item->penulis,
-                'penerbit' => $item->penerbit,
-                'isbn' => $item->isbn,
-                'tahun' => $item->tahun,
-                'jumlah' => $item->jumlah,
-                'image' => 'http://127.0.0.1:8000/storage/'.$fotoPath,
-            ];
-        });
+        // $data = $buku->map(function ($item) {
+        //     $fotoPath = $item->image;
+        //     return [
+        //         'judul' => $item->judul,
+        //         'kategori_id' => $item->kategori_id,
+        //         'penulis' => $item->penulis,
+        //         'penerbit' => $item->penerbit,
+        //         'isbn' => $item->isbn,
+        //         'tahun' => $item->tahun,
+        //         'jumlah' => $item->jumlah,
+        //         'image' => 'http://127.0.0.1:8000/storage/'.$fotoPath,
+        //     ];
+        // });
     
         return response()->json([
             'status' => true,
             'message' => 'Data berhasil ditampilkan',
-            'data' => $data,
+            'data' => $buku,
         ]);
     }
     
@@ -102,6 +102,7 @@ class BukuController extends Controller
         $buku->judul = $request->judul;
         $buku->kategori_id = $request->kategori_id;
         $buku->image = $fotoPath;
+        $buku->image_url = $fotoUrl;
         $buku->penulis = $request->penulis;
         $buku->penerbit = $request->penerbit;
         $buku->isbn = $request->isbn;
@@ -117,7 +118,8 @@ class BukuController extends Controller
             'data' => [
                 'judul' => $buku->judul,
                 'kategori_id' => $buku->kategori_id,
-                'fotoUrl' => $fotoUrl,
+                'image' => $buku->image,
+                'image_url' => $buku->image_url,
                 'penulis' => $buku->penulis,
                 'penerbit' => $buku->penerbit,
                 'isbn' => $buku->isbn,
@@ -171,10 +173,6 @@ class BukuController extends Controller
      */
     public function update(Request $request, $id)
     {
-        // $validatedData = $request->validate([
-        //     'title' => ['required', 'unique:posts', 'max:255'],
-        //     'body' => ['required'],
-        // ]);
         $buku = Buku::findOrFail($id);
 
         $rules = [
@@ -198,20 +196,29 @@ class BukuController extends Controller
             ]);
         }
 
+        $folderUpload = 'images';
+        $foto = $foto = $request->file('image');
+        $fotoPath = $foto->store($folderUpload, 'public');
+
+        $fotoUrl = Storage::disk('public')->url($fotoPath);
+
         $buku->judul = $request->judul;
         $buku->kategori_id = $request->kategori_id;
+        $buku->image = $fotoPath;
+        $buku->image_url = $fotoUrl;
         $buku->penulis = $request->penulis;
-        $buku->image = $request->image;
         $buku->penerbit = $request->penerbit;
         $buku->isbn = $request->isbn;
         $buku->tahun = $request->tahun;
         $buku->jumlah = $request->jumlah;
 
         $buku->save();
+
         return response()->json([
             'status' => true,
-            'message' => 'data berhasil diperbarui',
-            'data' => $request
+            'message' => 'data berhasil dikirim',
+            'data' =>  $request
+            ,
         ]);
     }
 
@@ -238,6 +245,5 @@ class BukuController extends Controller
                 'message' => 'data gagal dihapus',
             ]);
         }
-
     }
 }
